@@ -5,8 +5,7 @@ import sbt._, Keys._
 object ScalazPlugin extends AutoPlugin {
   object autoImport {
     val scalazVersion = settingKey[String]("scalaz version")
-
-    val scalazVersionRewriter = settingKey[(String, String) => String]("adjust the version based on a scalaz version")
+    val scalazCrossVersioner = settingKey[String => String]("modifies a version number according to scalaz version")
   }
 
   import autoImport._
@@ -15,43 +14,48 @@ object ScalazPlugin extends AutoPlugin {
 
   override lazy val projectSettings = Seq(
     scalazVersion := sys.env.get("SCALAZ_VERSION").getOrElse("7.2.7"),
-    scalazVersionRewriter := scalazBinaryVersionInQualifier,
-    version := scalazVersionRewriter.value(version.value, scalazVersion.value)
+    scalazCrossVersioner := scalazCrossVersioners.default(scalazVersion.value),
+    version := scalazCrossVersioner.value(version.value)
   )
 
-  val scalazBinaryVersionInQualifier = { (version: String, scalazVersion: String) =>
-    version match {
-      case VersionNumber(numbers, tags, extras) =>
-        val qualifier = scalazVersion match {
-          case VersionNumber(Seq(zMajor, zMinor, _*), _, _) =>
-            s"scalaz-$zMajor.$zMinor"
-          case _ =>
-            s"scalaz-$scalazVersion"
-        }
-        numbers.mkString(".") + (qualifier +: tags).mkString("-", "-", "") + extras.mkString("")
-      case _ =>
-        // Can't determine scalaz binary compatibility. *shrug*
-        s"${version}-scalaz-${scalazVersion}"
-    }
-  }
+  object scalazCrossVersioners {
+    /**
+     * Appends `-scalaz-X.Y` to the version number as a qualifier.  For
+     * example, version 1.0.0 applied to scalaz-7.2.7 becomes `1.0.0-scalaz-7.2`
+     */
+    def default(scalazVersion: String): String => String =
+      _ match {
+        case VersionNumber(numbers, tags, extras) =>
+          val qualifier = scalazVersion match {
+            case VersionNumber(Seq(7, zMinor, _*), Seq(), _) =>
+              s"scalaz-7.$zMinor"
+            case _ =>
+              //
+              s"scalaz-$scalazVersion"
+          }
+          numbers.mkString(".") + (qualifier +: tags).mkString("-", "-", "") + extras.mkString("")
+      }
 
-  /**
-   * This convention is prevalent in the community (scalaz-stream,
-   * http4s < 0.16, argonaut-6.1), but not recommended as it breaks
-   * semantic versioning.
-   */
-  val scalazSevenTwoSuffixA = { (version: String, scalazVersion: String) =>
-    VersionNumber(scalazVersion).numbers match {
-      case Seq(7, 2, _*) =>
-        version match {
-          case VersionNumber(numbers, tags, extras) =>
-            numbers.mkString(".") + "a" + (tags match {
-              case Seq() => ""
-              case ts => ts.mkString("-", "-", "")
-            }) + extras.mkString("")
-        }
-      case _ =>
-        version
-    }
+    def suffixed(scalazVersion: String)(suffixer: VersionNumber => String): String => String =
+      _ match {
+        case VersionNumber(numbers, tags, extras) =>
+          val suffix = suffixer(VersionNumber(scalazVersion))
+          numbers.mkString(".") + suffix + (tags match {
+            case Seq() => ""
+            case ts => ts.mkString("-", "-", "")
+          }) + extras.mkString("")
+      }
+
+    /**
+     * This convention was started with scalaz-stream-0.8, and
+     * followed by certain versions of http4s, doobie, and argonaut.
+     * It is not recommended, as it breaks semantic versioning and
+     * `sbt.VersionNumber` parsing.
+     */
+    def `scalaz-stream-0.8`(scalazVersion: String): String => String =
+      suffixed(scalazVersion) {
+        case VersionNumber(Seq(7, 2, _*), _, _) => "a"
+        case _ => ""
+      }
   }
 }
