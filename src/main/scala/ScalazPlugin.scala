@@ -108,7 +108,7 @@ object ScalazPlugin extends AutoPlugin {
     import scalazVersionRewriters._
 
     private def nopeNopeNope(scalazVersion: String) =
-      throw new NoSuchElementException("No version of ${moduleId} known for scalaz-${scalazVersion}. Try being explicit without `forScalaz`.")
+      throw new NoSuchElementException(s"No version of ${moduleId} known for scalaz-${scalazVersion}. Try being explicit without `forScalaz`.")
 
     /*
      * Attempts to version your Scalaz cross-built dependencies according
@@ -135,9 +135,7 @@ object ScalazPlugin extends AutoPlugin {
             }
           case m if m.organization == "org.http4s" & m.name.startsWith("http4s-") =>
             m.revision match {
-              case VersionNumber(Seq(x, y, _*), _, _) if (x, y) >= ((0, 16)) =>
-                default
-              case VersionNumber(Seq(0, y, _*), _, _) if y >= 13 =>
+              case VersionNumber(Seq(x, y, _*), _, _) if (x, y) >= ((0, 13)) =>
                 scalazStream_0_8
             }
           case m if m.organization == "org.http4s" & m.name == "jawn-streamz" =>
