@@ -14,7 +14,7 @@
 //:   limitations under the License.
 //:
 //: ----------------------------------------------------------------------------
-package io.verizon.build
+package verizon.build
 
 import sbt._, Keys._
 import scala.language.implicitConversions
