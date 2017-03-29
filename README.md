@@ -1,5 +1,7 @@
 # sbt-scalaz
 
+[![Build Status](https://travis-ci.org/Verizon/sbt-scalaz.svg?branch=master)](https://travis-ci.org/Verizon/sbt-scalaz)
+
 An sbt plugin to manage scalaz cross builds.  Features include:
 
 * Rewriting your project version based on community naming conventions.
