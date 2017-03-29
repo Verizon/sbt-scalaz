@@ -1,6 +1,8 @@
 # sbt-scalaz
 
 [![Build Status](https://travis-ci.org/Verizon/sbt-scalaz.svg?branch=master)](https://travis-ci.org/Verizon/sbt-scalaz)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.verizon.build/sbt-scalaz_2.10_0.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.verizon.build/sbt-scalaz_2.10_0.13/)
+
 
 An sbt plugin to manage scalaz cross builds.  Features include:
 
